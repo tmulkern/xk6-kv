@@ -1,50 +1,16 @@
 package kv
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	badger "github.com/dgraph-io/badger/v3"
-	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 )
 
-func init() {
-	modules.Register("k6/x/kv", new(KV))
-}
-
-// KV is the k6 key-value extension.
-type KV struct{}
-
 type Client struct {
+	vu modules.VU
 	db *badger.DB
-}
-
-var check = false
-var client *Client
-
-// XClient represents the Client constructor (i.e. `new kv.Client()`) and
-// returns a new Key Value client object.
-func (r *KV) XClient(ctxPtr *context.Context, name string, memory bool) interface{} {
-	rt := common.GetRuntime(*ctxPtr)
-	if check != true {
-		if name == "" {
-			name = "/tmp/badger"
-		}
-		var db *badger.DB
-		if memory {
-			db, _ = badger.Open(badger.DefaultOptions("").WithLoggingLevel(badger.ERROR).WithInMemory(true))
-		} else {
-			db, _ = badger.Open(badger.DefaultOptions(name).WithLoggingLevel(badger.ERROR))
-		}
-		client = &Client{db: db}
-		check = true
-		return common.Bind(rt, client, ctxPtr)
-	} else {
-		return common.Bind(rt, client, ctxPtr)
-	}
-
 }
 
 // Set the given key with the given value.

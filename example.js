@@ -1,4 +1,6 @@
 import kv from 'k6/x/kv';
+import { check } from 'k6';
+import exec from 'k6/execution';
 
 export const options = {
   scenarios: {
@@ -32,26 +34,51 @@ export function generator() {
 }
 
 export function results() {
-  console.log(client.get("hello_1"));
+  var value = client.get("hello_1")
+
+  check(value,{
+    "Item contains correct value" : (v) => v == 'world'
+  });
+
+  console.debug(value);
+
   client.delete("hello_1");
+
   try {
     var keyDeleteValue = client.get("hello_1");
-    console.log(typeof (keyDeleteValue));
+    console.debug(typeof (keyDeleteValue));
   }
   catch (err) {
-    console.log("empty value", err);
+    check(err,{
+      "Delete: Empty value is correct" : (e) => Object.keys(e.value).length == 0
+    });
+    console.debug("empty value", err);
   }
   var r = client.viewPrefix("hello");
+
+  check(r,{
+    "Collection of values with prefix 'hello' created" : (x) => Object.keys(x).length > 0
+  })
+
   for (var key in r) {
-    console.log(key, r[key])
+    console.debug(key, r[key])
   }
 }
 
 export function ttl() {
   try {
-    console.log(client.get('ttl_1'));
+    var value = client.get('ttl_1')
+    
+    check(value,{
+      "TTL: Item contains correct value" : (v) => v == 'ttl_1'
+    });
+
+    console.debug(value);
   }
   catch (err) {
-    console.log("empty value", err);
+    check(err,{
+      "TTL : Empty value is correct" : (e) => Object.keys(e.value).length == 0
+    });
+    console.debug("empty value", err);
   }
 }
